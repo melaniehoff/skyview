@@ -1,0 +1,160 @@
+///////////////////
+///////////////////
+
+function log(...args) {
+  let message = args.join(' ');
+  $('#log').prepend('--&gt; ' + message + '<br>');
+}
+
+function warn(...args) {
+  log(...args);
+  $('#log').addClass('warn');
+}
+
+function hideLog() {
+  $('#log').hide();
+}
+
+function showLog() {
+  $('#log').show();
+}
+
+function clearLog() {
+  $('#log').empty();
+}
+
+window.onerror = (error) => {
+  $('#log').addClass('error').text(`Error: ${error}`);
+}
+
+function checkSupportFor(name, propertyName, propertyOwner=window) {
+  if (!(propertyName in propertyOwner)) {
+    warn(`No support for ${name}`)
+  } else {
+    log(`Supports ${name}!`);
+    return true;
+  }
+}
+
+function isInIframe() {
+  return window.parent !== window;
+}
+
+$(() => {
+  log('Ready!');
+  showLog();
+  $('#clear-log').click(clearLog);
+});
+
+//////////////////
+//////////////////
+
+function getPositionOptions() {
+  let positionOptions = {
+    enableHighAccuracy: false, // when true, a more accurate position is
+                               // returned when possible (may take longer or use more battery power)
+    timeout: Infinity, // will never stop attempting to locate
+    maximumAge: 0, // can use a cached/old position
+  };
+  return positionOptions;
+}
+
+function watchPosition() {
+  log('Attempting to start watching...');
+
+  let watchId = navigator.geolocation.watchPosition(locateSuccess, locateError, getPositionOptions());
+  
+  $('#stop-watch').show();
+  $('#stop-watch').data('watchId', watchId);
+  $('#watch').hide();
+}
+
+// See http://www.html5rocks.com/en/tutorials/geolocation/trip_meter/#disqus_thread
+// http://www.movable-type.co.uk/scripts/latlong.html
+function calculateDistance(coords1, coords2) {
+  let { latitude: lat1, longitude: lon1 } = coords1;
+  let { latitude: lat2, longitude: lon2 } = coords2;
+  
+  let toRad = (number) => number * Math.PI / 180;
+  
+  var R = 6371; // km
+  var dLat = toRad(lat2 - lat1);
+  var dLon = toRad(lon2 - lon1);
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
+          Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+  var d = R * c;
+  return d;
+}
+
+function getStaticMapImage(coords) {
+  let {latitude, longitude} = coords;
+ return "https://maps.googleapis.com/maps/api/streetview?size=2000x700&location=" + latitude + "," + longitude +"&heading=151.78&fov=40&pitch=90&key=AIzaSyBkyqO7gZEog5fj5WyDW_JLvPBmpuM5ZfI";
+ console.log('streetview');
+}
+
+function locate() {
+  log('Attempting to locate...');
+  navigator.geolocation.getCurrentPosition(locateSuccess, locateError, getPositionOptions());
+  //console.log('street');
+}
+
+function locateSuccess(position) {
+  log('successfully located you!');
+  
+  if (!startCoords) {
+    startCoords = position.coords;
+  }
+  currentCoords = position.coords;
+
+  $('#location').show();
+  $('#no-location').hide();
+
+  let properties = [
+    'latitude', 'longitude', 'altitude', 'heading', 'speed', 'accuracy'
+  ];
+  
+//   function getStreetView(coords) {
+//   let {latitude, longitude} = coords;
+//   return "https://maps.googleapis.com/maps/api/streetview?size=1000x700&location=" + latitude + "," + longitude +"&heading=151.78&pitch=-0.76&key=AIzaSyBkyqO7gZEog5fj5WyDW_JLvPBmpuM5ZfI";
+    
+//     console.log('streetview!');
+//   }
+  
+  properties.forEach(property => {
+    let value = position.coords[property];
+    $('#' + property).text(value);
+  });
+  let timestamp = new Date(position.timestamp);
+  $('#timestamp').text(timestamp);
+
+  $('#static-map-image').attr('src', getStaticMapImage(position.coords));
+  $('#distance').text(calculateDistance(startCoords, currentCoords));
+}
+
+function locateError(error) {
+  log('Error locating you: ' + error);
+  
+  $('#location-error').show();
+  $('#location-error').text(`Error locating: ${error}`);
+}
+
+function stopWatching() {
+  let watchId = $('#stop-watch').data('watchId');
+  log('stop watching id:', watchId);
+  
+  navigator.geolocation.clearWatch(watchId);
+  
+  $('#stop-watch').hide();
+  $('#watch').show();
+}
+
+let startCoords;
+let currentCoords;
+
+$(() => {
+  $('#watch').click(watchPosition);  
+  $('#stop-watch').click(stopWatching);
+  $('#locate').click(locate);
+});

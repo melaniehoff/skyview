@@ -1,0 +1,23 @@
+.no-show {
+  display: none;
+}
+
+#log {
+  border: 1px solid black;
+  padding: 0.25em;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40%;
+  min-height: 1em;
+  
+  &.error {
+    border: 3px solid red;    
+  }
+}
+
+#clear-log {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

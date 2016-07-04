@@ -1,0 +1,37 @@
+%h1 Geolocation API Demo
+
+%button#locate
+  Locate (once)
+%button#watch
+  Start watching position
+%button#stop-watch.no-show
+  Stop watching position
+
+#no-location
+  No Location found yet
+
+#location.no-show
+  %table.table
+    %tr
+      %th Last update
+      %th Latitude
+      %th Longitude
+      %th Altitude
+      %th Heading
+      %th Speed
+      %th Accuracy
+      %th Distance from start
+    %tr
+      %td#timestamp
+      %td#latitude
+      %td#longitude
+      %td#altitude
+      %td#heading
+      %td#speed
+      %td#accuracy
+      %td#distance
+  
+  %img#static-map-image
+
+#log
+%button#clear-log X
